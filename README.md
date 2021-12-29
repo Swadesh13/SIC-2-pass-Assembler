@@ -1,3 +1,5 @@
+```Errors debugged.```
+
 SIC_program.txt - contains an assembly level program written for a SIC machine.
 
 SYMTAB.txt - contains all the labels and their addresses generated during 1st pass.
