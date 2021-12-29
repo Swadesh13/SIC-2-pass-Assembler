@@ -6,12 +6,6 @@
 int PASS1();
 int PASS2();
 
-/*struct OPTAB
-{
-	char mnemonic[8];
-	int opcode;
-}optab;*/
-	
 int main()
 {
     PASS1();
@@ -96,68 +90,63 @@ int PASS1()
 			}
 			
 			rewind(fOptab);
-			while(!feof(fOptab))	//search optab for OPCODE
+			flag=10;
+			while(fscanf(fOptab,"%s", mnem) == 1){
+				if(strcmp(mnemonic, mnem)==0) {//if match found
+					flag = 0;
+				}
+			}
+			if(flag==0)
 			{
-				fscanf(fOptab,"%s%s",mnem,&op);
-				if(strcmp(mnemonic,mnem)==0)
+				locctr += 3;
+				flag = 0;
+			}
+			else if(strcmp(mnemonic,"WORD")==0 || strcmp(mnemonic,"word")==0)
+			{	
+				locctr += 3;
+				flag = 0;
+			}
+			else if((strcmp(mnemonic,"RESW")==0) || (strcmp(mnemonic,"resw")==0))
+			{	
+				locctr += 3*atoi(operand);
+				flag = 0;
+			}
+			else if(strcmp(mnemonic,"RESB")==0 || strcmp(mnemonic,"resb")==0)
+			{	
+				locctr += atoi(operand);
+				flag = 0;
+			}
+			else if(strcmp(mnemonic,"BYTE")==0 || strcmp(mnemonic,"byte")==0)
+			{
+				j = strlen(operand);
+				if(operand[0] !='C' && operand[0] != 'X')
+				{	
+					locctr += 1;
+					flag = 0;
+				}
+				else if(strcmp(mnemonic,"BYTE")==0 && operand[0] =='C')
 				{
-					locctr += 3;
+					locctr += j-3;	//-3 is done to account for C' '
 					flag = 0;
-					break;
 				}
-				else if(strcmp(mnemonic,"WORD")==0 || strcmp(mnemonic,"word")==0)
+				else if(strcmp(mnemonic,"BYTE")==0 && operand[0] =='X')
 				{	
-					locctr += 3;
-					flag = 0;
-					break;
-				}
-				else if((strcmp(mnemonic,"RESW")==0) || (strcmp(mnemonic,"resw")==0))
-				{	
-					locctr += 3*atoi(operand);
-					flag = 0;
-					break;
-				}
-				else if(strcmp(mnemonic,"RESB")==0 || strcmp(mnemonic,"resb")==0)
-				{	
-					locctr += atoi(operand);
-					flag = 0;
-					break;
-				}
-				else if(strcmp(mnemonic,"BYTE")==0 || strcmp(mnemonic,"byte")==0)
-				{
-					j = strlen(operand);
-					if(operand[0] !='C' && operand[0] != 'X')
-					{	
-						locctr += 1;
-						flag = 0;
-						break;
-					}
-					else if(strcmp(mnemonic,"BYTE")==0 && operand[0] =='C')
-					{
-						locctr += j-3;	//-3 is done to account for C' '
-						flag = 0;
-						break;
-					}
-					else if(strcmp(mnemonic,"BYTE")==0 && operand[0] =='X')
-					{	
-						if((j-3)%2 != 0)
-							locctr += (j-3)/2 + 1;
-						else
-							locctr += (j-3)/2 ;
-						flag = 0;
-						break;
-					}
+					if((j-3)%2 != 0)
+						locctr += (j-3)/2 + 1;
 					else
-					{
-						flag = 1;
-					}
+						locctr += (j-3)/2 ;
+					flag = 0;
 				}
-				if(flag == 1)
+				else
 				{
-					printf("\n%s not present in OPTAB!",mnemonic);
-					printf("\nExiting ...");
-					return 0;
+					flag = 1;
 				}
+			}
+			if(flag == 1)
+			{
+				printf("\n%s not present in OPTAB!",mnemonic);
+				printf("\nExiting ...");
+				return 0;
 			}
 		}
 		if(strcmp(mnemonic,"END")==0)
@@ -181,7 +170,7 @@ int PASS1()
 
 int PASS2()
 {
-	int locctr=0X0, start=0X0, sa=0X0, program_length=0X0, ret, op_status = 0, address=0X0, target=0X0, ascii=0X0, temp1=0X0, j, k, count=0X0, record_len=0X0;
+	int locctr=0X0, start=0X0, sa=0X0, program_length=0X0, ret, op_status = 0, address=0X0, target=0X0, ascii=0X0, temp1=0X0, j=2, k, count=0X0, record_len=0X0;
 	char label[12], mnemonic[8], operand[12], buffer[64], mnem[8], op[2], symbol[12], opcode[2], cons[8];
 	long int aseek,bseek;
 	FILE *fIntrm, *fSymtab, *fOptab, *fLength, *fobj;
@@ -202,15 +191,13 @@ int PASS2()
         start = (int)strtol(operand,NULL,16);
         fscanf(fLength,"%X",&program_length);
         fprintf(fobj,"H^%6s^%06X^%06X",label,start,program_length);
-    	fprintf(fobj,"\nT^%06X^00^",start);
-    	bseek = ftell(fobj);
+		fprintf(fobj,"\nT^%06X^00^",start);
+		bseek = ftell(fobj);
 	}
-	    
     fgets(buffer,64,fIntrm);
 	while(!feof(fIntrm))
 	{
 		fgets(buffer,64,fIntrm);
-		//printf("\tbuffer=%s",buffer);
 		ret = sscanf(buffer,"%X%s%s%s",&locctr,label,mnemonic,operand);
 
 		if(ret == 2) //in case of RSUB
